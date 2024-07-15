@@ -1,7 +1,7 @@
 package format
 
 import (
-	ddt "github.com/PlayerR9/MyGoLib/Display/drawtable"
+	ddt "github.com/PlayerR9/display/Display/drawtable"
 )
 
 // ZeroElement is a type that represents an element that takes up a certain amount of space.

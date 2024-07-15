@@ -1,4 +1,4 @@
-package drawtable
+package Table
 
 import (
 	"github.com/gdamore/tcell"

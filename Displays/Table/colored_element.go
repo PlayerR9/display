@@ -1,8 +1,8 @@
 package Table
 
 import (
-	cdt "github.com/PlayerR9/MyGoLib/CustomData/Table"
-	ddt "github.com/PlayerR9/MyGoLib/Display/drawtable"
+	cdt "github.com/PlayerR9/display/Table"
+	tg "github.com/PlayerR9/table"
 	"github.com/gdamore/tcell"
 )
 
@@ -38,7 +38,7 @@ func (ce *ColoredElement[T]) Draw(table *DrawTable, x, y *int) error {
 	}
 
 	// Fix the boundaries of the rune table
-	runeTable = cdt.FixBoundaries(width, height, runeTable, x, y)
+	runeTable = tg.FixBoundaries(width, height, runeTable, x, y)
 	if len(runeTable) == 0 {
 		return nil
 	}
@@ -52,13 +52,13 @@ func (ce *ColoredElement[T]) Draw(table *DrawTable, x, y *int) error {
 			continue
 		}
 
-		sequence := make([]*ddt.ColoredUnit, 0, len(row))
+		sequence := make([]*cdt.ColoredUnit, 0, len(row))
 
 		for _, r := range row {
 			if r == EmptyRuneCell {
 				sequence = append(sequence, nil)
 			} else {
-				sequence = append(sequence, ddt.NewColoredUnit(r, ce.style))
+				sequence = append(sequence, cdt.NewColoredUnit(r, ce.style))
 			}
 		}
 
@@ -104,19 +104,19 @@ func NewColoredElement[T Colorer](elem T, style tcell.Style) *ColoredElement[T] 
 //   - Errors are only for critical issues, such as the element not being able to be
 //     colored. However, out of bounds or other issues should not error. Instead, the
 //     element should be colored as much as possible before unable to be colored.
-func (ce *ColoredElement[T]) Apply(width, height int) ([][]*ddt.ColoredUnit, error) {
+func (ce *ColoredElement[T]) Apply(width, height int) ([][]*cdt.ColoredUnit, error) {
 	runeTable, err := ce.elem.Runes(width, height)
 	if err != nil {
 		return nil, err
 	}
 
-	colorTable := make([][]*ddt.ColoredUnit, len(runeTable))
+	colorTable := make([][]*cdt.ColoredUnit, len(runeTable))
 
 	for _, row := range runeTable {
-		var colorRow []*ddt.ColoredUnit
+		var colorRow []*cdt.ColoredUnit
 
 		for _, r := range row {
-			colorRow = append(colorRow, ddt.NewColoredUnit(r, ce.style))
+			colorRow = append(colorRow, cdt.NewColoredUnit(r, ce.style))
 		}
 
 		colorTable = append(colorTable, colorRow)

@@ -3,14 +3,13 @@ package Table
 import (
 	"strings"
 
-	cdt "github.com/PlayerR9/MyGoLib/CustomData/Table"
-	ddt "github.com/PlayerR9/MyGoLib/Display/drawtable"
+	cdt "github.com/PlayerR9/display/Table"
 	"github.com/gdamore/tcell"
 )
 
 // DrawTable represents a table of cells that can be drawn to the screen.
 type DrawTable struct {
-	*cdt.Table[*ddt.ColoredUnit]
+	*cdt.Table
 }
 
 // NewDrawTable creates a new DrawTable with the given width and height.
@@ -25,7 +24,7 @@ type DrawTable struct {
 // Behaviors:
 //   - If the width or height is negative, the absolute value is used.
 func NewDrawTable(width, height int) *DrawTable {
-	table := cdt.NewTable[*ddt.ColoredUnit](width, height)
+	table := cdt.NewTable(width, height)
 
 	return &DrawTable{table}
 }
@@ -89,10 +88,10 @@ func (dt *DrawTable) GetLines() []string {
 func (dt *DrawTable) WriteLineAt(x, y *int, line string, style tcell.Style, isHorizontal bool) {
 	runes := []rune(line)
 
-	sequence := make([]*ddt.ColoredUnit, 0, len(runes))
+	sequence := make([]*cdt.ColoredUnit, 0, len(runes))
 
 	for _, r := range runes {
-		sequence = append(sequence, ddt.NewColoredUnit(r, style))
+		sequence = append(sequence, cdt.NewColoredUnit(r, style))
 	}
 
 	if isHorizontal {

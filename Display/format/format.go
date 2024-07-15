@@ -5,8 +5,8 @@ import (
 	"slices"
 	"sync"
 
-	ddt "github.com/PlayerR9/MyGoLib/Display/drawtable"
 	uc "github.com/PlayerR9/MyGoLib/Units/common"
+	ddt "github.com/PlayerR9/display/Display/drawtable"
 )
 
 // Format is a type that represents a format.

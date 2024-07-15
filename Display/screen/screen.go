@@ -9,8 +9,8 @@ import (
 
 	"github.com/gdamore/tcell"
 
-	ddt "github.com/PlayerR9/MyGoLib/Display/drawtable"
 	rws "github.com/PlayerR9/MyGoLib/Safe/RWSafe"
+	ddt "github.com/PlayerR9/display/Display/drawtable"
 )
 
 // Display represents a display that can draw elements to the screen.
