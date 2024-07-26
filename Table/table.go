@@ -112,7 +112,7 @@ func (t *Table) WriteAt(x, y int, cell *ColoredUnit) {
 //   - *ColoredUnit: The cell at the given coordinates.
 func (t *Table) GetAt(x, y int) *ColoredUnit {
 	if x < 0 || x >= t.width || y < 0 || y >= t.height {
-		return *new(*ColoredUnit)
+		return nil
 	} else {
 		return t.table[y][x]
 	}
