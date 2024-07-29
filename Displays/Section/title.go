@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	uc "github.com/PlayerR9/MyGoLib/Units/common"
-	sext "github.com/PlayerR9/MyGoLib/Utility/StringExt"
+	sext "github.com/PlayerR9/MyGoLib/StringExt"
+	uc "github.com/PlayerR9/lib_units/common"
 )
 
 const (
