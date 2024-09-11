@@ -1,8 +1,6 @@
 package screen
 
 import (
-	"sync"
-
 	gcers "github.com/PlayerR9/go-commons/errors"
 	rws "github.com/PlayerR9/safe/rw_safe"
 	"github.com/gdamore/tcell"
@@ -25,20 +23,26 @@ type Screen struct {
 	// event_ch is the event channel.
 	event_ch chan tcell.Event
 
+	// key_ch is the key channel.
+	key_ch chan *tcell.EventKey
+
 	// width is the width of the screen.
 	width int
 
 	// height is the height of the screen.
 	height int
 
+	// dt is the display table.
+	dt *DtTable
+
 	// to_display is the table to display.
 	to_display *rws.Safe[*DtTable]
 
-	// pos is the position of the cursor.
-	pos *rws.Safe[int]
+	// pos_y is the position of the cursor.
+	pos_y *rws.Safe[int]
 
-	// wg is the wait group.
-	wg sync.WaitGroup
+	// pos_x is the position of the cursor.
+	pos_x *rws.Safe[int]
 }
 
 // NewScreen creates a new screen.
@@ -55,9 +59,11 @@ func NewScreen() (*Screen, error) {
 	return &Screen{
 		screen:     screen,
 		event_ch:   make(chan tcell.Event, 1),
+		key_ch:     make(chan *tcell.EventKey),
 		width:      80,
 		height:     25,
-		pos:        rws.NewSafe(0),
+		pos_x:      rws.NewSafe(0),
+		pos_y:      rws.NewSafe(0),
 		to_display: rws.NewSafe[*DtTable](nil),
 	}, nil
 }
@@ -98,8 +104,6 @@ func (s *Screen) Start() error {
 
 	go s.event_listener()
 
-	s.wg.Add(1)
-
 	go s.run()
 
 	return nil
@@ -111,71 +115,45 @@ func (s *Screen) Close() {
 		return
 	}
 
-	s.wg.Wait()
-
 	s.screen.Fini()
 
-	close(s.event_ch)
-}
-
-// handle_event handles an event.
-//
-// Parameters:
-//   - ev: The event to handle.
-//
-// Returns:
-//   - bool: True if the screen should be closed, false otherwise.
-func (s *Screen) handle_event(ev tcell.Event) bool {
-	switch ev := ev.(type) {
-	case *tcell.EventKey:
-		switch ev.Key() {
-		case tcell.KeyEnter:
-			return true
-		case tcell.KeyUp:
-			val := s.pos.Get()
-			s.pos.Set(val - 1)
-
-			s.show_display()
-		case tcell.KeyDown:
-			val := s.pos.Get()
-			s.pos.Set(val + 1)
-
-			s.show_display()
-		}
-	case *tcell.EventResize:
-		// s.screen.Sync()
-
-		s.width, s.height = ev.Size()
-
-		s.show_display()
-	case *tcell.EventMouse:
-		button := ev.Buttons()
-
-		if button == tcell.WheelUp {
-			val := s.pos.Get()
-			s.pos.Set(val - 1)
-		} else if button == tcell.WheelDown {
-			val := s.pos.Get()
-			s.pos.Set(val + 1)
-		}
-
-		s.show_display()
+	if s.event_ch != nil {
+		close(s.event_ch)
+		s.event_ch = nil
 	}
 
-	return false
+	if s.key_ch != nil {
+		close(s.key_ch)
+		s.key_ch = nil
+	}
 }
 
 // run runs the screen.
 func (s *Screen) run() {
-	defer s.wg.Done()
-
-	for {
-		select {
-		case ev := <-s.event_ch:
-			should_close := s.handle_event(ev)
-			if should_close {
-				return
+	for ev := range s.event_ch {
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			select {
+			case s.key_ch <- ev:
 			}
+		case *tcell.EventResize:
+			// s.screen.Sync()
+
+			s.width, s.height = ev.Size()
+
+			s.show_display()
+			// case *tcell.EventMouse:
+			// 	button := ev.Buttons()
+
+			// 	if button == tcell.WheelUp {
+			// 		val := s.pos_y.Get()
+			// 		s.pos_y.Set(val - 1)
+			// 	} else if button == tcell.WheelDown {
+			// 		val := s.pos_y.Get()
+			// 		s.pos_y.Set(val + 1)
+			// 	}
+
+			// 	s.show_display()
 		}
 	}
 }
@@ -195,18 +173,19 @@ func (s *Screen) show_display() {
 	y := 0
 	x := 0
 
-	pos := s.pos.Get()
+	pos_x := s.pos_x.Get()
+	pos_y := s.pos_y.Get()
 
-	if pos >= table.Height() {
+	if pos_y >= table.Height() {
 		s.screen.Show()
 
 		return
-	} else if pos < 0 {
-		y -= pos
-		pos = 0
+	} else if pos_y < 0 {
+		y -= pos_y
+		pos_y = 0
 	}
 
-	underlying_table := table.cells[pos:]
+	underlying_table := table.cells[pos_y:]
 
 	for _, row := range underlying_table {
 		if y >= s.height-3 {
@@ -218,7 +197,7 @@ func (s *Screen) show_display() {
 			if j >= s.width {
 				j = 0
 				y++
-				x = 0 // Change this to indent the next line
+				x = pos_x // Change this to indent the next line
 			}
 
 			if c == nil {
@@ -232,7 +211,7 @@ func (s *Screen) show_display() {
 		}
 
 		y++
-		x = 0
+		x = pos_x
 	}
 
 	style := tcell.StyleDefault.Background(tcell.ColorCornflowerBlue).Foreground(tcell.ColorWhite)
@@ -259,6 +238,18 @@ func (s *Screen) display_label(x, y int, style tcell.Style, text string) {
 	}
 }
 
+// Table returns the table.
+//
+// Returns:
+//   - *DtTable: The table. Nil only if the receiver is nil.
+func (s *Screen) Table() *DtTable {
+	if s == nil {
+		return nil
+	}
+
+	return s.dt
+}
+
 // Display displays the screen.
 //
 // Parameters:
@@ -266,7 +257,7 @@ func (s *Screen) display_label(x, y int, style tcell.Style, text string) {
 //
 // Returns:
 //   - error: An error if the screen could not be displayed.
-func (s *Screen) Display(drawer Drawer) error {
+func (s *Screen) Display(x, y int, drawer Drawer) error {
 	if s == nil {
 		return gcers.NilReceiver
 	}
@@ -283,8 +274,31 @@ func (s *Screen) Display(drawer Drawer) error {
 	}
 
 	s.to_display.Set(table)
+	s.pos_x.Set(x)
+	s.pos_y.Set(y)
 
 	s.show_display()
 
 	return nil
+}
+
+// ListenForKey listens for a key press event on the screen.
+//
+// Parameters:
+//   - None.
+//
+// Returns:
+//   - *tcell.EventKey: The key press event.
+//   - bool: Whether the channel is still open.
+func (s *Screen) ListenForKey() (*tcell.EventKey, bool) {
+	if s == nil || s.key_ch == nil {
+		return nil, false
+	}
+
+	ev, ok := <-s.key_ch
+	if !ok {
+		return nil, false
+	}
+
+	return ev, true
 }
