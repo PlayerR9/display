@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	sext "github.com/PlayerR9/MyGoLib/StringExt"
-	uc "github.com/PlayerR9/lib_units/common"
+	gcfs "github.com/PlayerR9/display/util/Formatting/strings"
+	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
 const (
@@ -154,11 +154,11 @@ func (t *Title) tryToFitLines(fullTitle string, width int) ([]string, error) {
 		return lines, nil
 	}
 
-	fullTitle = sext.FitString(fullTitle, width-TitleMinWidth)
+	fullTitle = gcfs.FitString(fullTitle, width-TitleMinWidth)
 
-	fullTitle, ok := sext.ReplaceSuffix(fullTitle, Hellip)
+	fullTitle, ok := gcfs.ReplaceSuffix(fullTitle, Hellip)
 	if !ok {
-		return nil, sext.NewErrLongerSuffix(fullTitle, Hellip)
+		return nil, gcfs.NewErrLongerSuffix(fullTitle, Hellip)
 	}
 
 	var builder strings.Builder
@@ -184,20 +184,20 @@ func (t *Title) tryToFitLines(fullTitle string, width int) ([]string, error) {
 func generateLines(fullTitle string, width int) ([]string, error) {
 	contents := strings.Fields(fullTitle) // FIXME: Use a better method to split the text
 
-	numberOfLines, err := sext.CalculateNumberOfLines(contents, width-TitleMinWidth)
+	numberOfLines, err := gcfs.CalculateNumberOfLines(contents, width-TitleMinWidth)
 	if err != nil {
-		ok := uc.Is[*sext.ErrLinesGreaterThanWords](err)
+		ok := gcers.Is[*gcfs.ErrLinesGreaterThanWords](err)
 		if !ok {
 			return nil, fmt.Errorf("could not calculate number of lines: %s", err.Error())
 		}
 	}
 
-	ts, err := sext.SplitInEqualSizedLines(contents, width-TitleMinWidth, numberOfLines)
+	ts, err := gcfs.SplitInEqualSizedLines(contents, width-TitleMinWidth, numberOfLines)
 	if err != nil {
 		return nil, fmt.Errorf("could not split text in equal sized lines: %s", err.Error())
 	}
 
-	lines := ts.GetLines()
+	lines := ts.Lines()
 	var builder strings.Builder
 
 	for i := 0; i < len(lines); i++ {

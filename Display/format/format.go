@@ -6,11 +6,11 @@ import (
 	"sync"
 
 	ddt "github.com/PlayerR9/display/Display/drawtable"
-	uc "github.com/PlayerR9/lib_units/common"
+	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
 // Format is a type that represents a format.
-type Format[T uc.Enumer] struct {
+type Format[T gcers.Enumer] struct {
 	// m is the map of elements.
 	m map[T]ddt.Displayer
 
@@ -53,7 +53,7 @@ func (f *Format[T]) Draw(table *ddt.DrawTable, x, y *int) error {
 //
 // Returns:
 //   - *Format: The new format.
-func NewFormat[T uc.Enumer]() *Format[T] {
+func NewFormat[T gcers.Enumer]() *Format[T] {
 	return &Format[T]{
 		m: make(map[T]ddt.Displayer),
 	}

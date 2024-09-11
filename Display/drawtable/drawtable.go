@@ -1,6 +1,7 @@
 package drawtable
 
 import (
+	"iter"
 	"strings"
 
 	cdt "github.com/PlayerR9/display/Table"
@@ -39,7 +40,9 @@ func NewDrawTable(width, height int) *DrawTable {
 //   - The last line may not be full width.
 func (dt *DrawTable) GetLines() []string {
 	width := dt.GetWidth()
-	iter := dt.Iterator()
+
+	next, close := iter.Pull(dt.Cell())
+	defer close()
 
 	var lines []string
 	var builder strings.Builder
@@ -52,8 +55,8 @@ func (dt *DrawTable) GetLines() []string {
 			count = 0
 		}
 
-		unit, err := iter.Consume()
-		if err != nil {
+		unit, ok := next()
+		if !ok {
 			break
 		}
 

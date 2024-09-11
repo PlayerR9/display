@@ -10,7 +10,7 @@ import (
 	"github.com/gdamore/tcell"
 
 	ddt "github.com/PlayerR9/display/Display/drawtable"
-	rws "github.com/PlayerR9/safe/RWSafe"
+	rws "github.com/PlayerR9/safe/rw_safe"
 )
 
 // Display represents a display that can draw elements to the screen.

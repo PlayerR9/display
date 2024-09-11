@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	sext "github.com/PlayerR9/MyGoLib/StringExt"
+	gcstr "github.com/PlayerR9/display/util/Formatting/strings"
 )
 
 const (
@@ -101,7 +101,7 @@ func (mlt *MultilineText) ApplyRender(width, height int) ([]*Render, error) {
 	tableHeight := height
 
 	for _, ts := range tss {
-		totalHeight += ts.GetHeight()
+		totalHeight += ts.Height()
 
 		if totalHeight > tableHeight {
 			break
@@ -114,7 +114,7 @@ func (mlt *MultilineText) ApplyRender(width, height int) ([]*Render, error) {
 	yCoord := 0
 
 	for _, ts := range tss {
-		currentHeight := ts.GetHeight()
+		currentHeight := ts.Height()
 
 		canRenderMore := currentHeight+yCoord <= tableHeight
 		if !canRenderMore {
@@ -123,7 +123,7 @@ func (mlt *MultilineText) ApplyRender(width, height int) ([]*Render, error) {
 			runeTable = nil
 			yCoord = 0
 		} else {
-			runeTable = append(runeTable, ts.GetRunes()...)
+			runeTable = append(runeTable, ts.Runes()...)
 
 			yCoord += currentHeight
 		}
@@ -156,19 +156,19 @@ func (mlt *MultilineText) ApplyRender(width, height int) ([]*Render, error) {
 //   - *sext.TextSplit - the updated TextSplitter.
 //   - bool - a boolean indicating whether the text was truncated.
 //   - error - an error if the text could not be processed.
-func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *sext.TextSplit, words []string) (*sext.TextSplit, bool, error) {
+func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *gcstr.TextSplit, words []string) (*gcstr.TextSplit, bool, error) {
 	if !isFirst {
 		maxWidth -= IndentLevel
 	}
 
-	numberOfLines, err := sext.CalculateNumberOfLines(words, maxWidth)
+	numberOfLines, err := gcstr.CalculateNumberOfLines(words, maxWidth)
 
 	if err != nil {
 		line := strings.Join(words, "")[:maxWidth]
 
-		line, ok := sext.ReplaceSuffix(line, Hellip)
+		line, ok := gcstr.ReplaceSuffix(line, Hellip)
 		if !ok {
-			return nil, false, sext.NewErrLongerSuffix(line, Hellip)
+			return nil, false, gcstr.NewErrLongerSuffix(line, Hellip)
 		}
 
 		ok = ts.InsertWord(line)
@@ -215,7 +215,7 @@ func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *sext.TextS
 
 		return ts, true, nil
 	} else {
-		halfTs, err := sext.SplitInEqualSizedLines(
+		halfTs, err := gcstr.SplitInEqualSizedLines(
 			words, maxWidth, numberOfLines,
 		)
 
@@ -223,7 +223,7 @@ func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *sext.TextS
 			return nil, false, fmt.Errorf("could not split text: %s", err.Error())
 		}
 
-		wordsProcessed := halfTs.GetFirstLine()
+		wordsProcessed := halfTs.FirstLine()
 
 		firstNotInserted := ts.InsertWords(wordsProcessed)
 		if firstNotInserted != -1 {
@@ -245,8 +245,8 @@ func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *sext.TextS
 // The function returns a pointer to the created TextSplitter
 // and an error. If no errors occur during the creation of the
 // TextSplitter, the error is nil.
-func (mlt *MultilineText) createTextSplitter(lines [][]string, maxWidth, maxHeight int) (*sext.TextSplit, error) {
-	ts, err := sext.NewTextSplit(maxWidth, maxHeight)
+func (mlt *MultilineText) createTextSplitter(lines [][]string, maxWidth, maxHeight int) (*gcstr.TextSplit, error) {
+	ts, err := gcstr.NewTextSplit(maxWidth, maxHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not create TextSplitter: %s", err.Error())
 	}
@@ -294,8 +294,8 @@ func (mlt *MultilineText) createTextSplitter(lines [][]string, maxWidth, maxHeig
 // Returns:
 //   - []*sext.TextSplit - a slice of TextSplit objects representing the optimized content.
 //   - error - an error if the content could not be applied.
-func (mlt *MultilineText) forceApply(maxWidth, maxHeight int) ([]*sext.TextSplit, error) {
-	finalTs := make([]*sext.TextSplit, 0, len(mlt.lines))
+func (mlt *MultilineText) forceApply(maxWidth, maxHeight int) ([]*gcstr.TextSplit, error) {
+	finalTs := make([]*gcstr.TextSplit, 0, len(mlt.lines))
 
 	for _, line := range mlt.lines {
 		sentences := [][]string{line}
@@ -307,7 +307,7 @@ func (mlt *MultilineText) forceApply(maxWidth, maxHeight int) ([]*sext.TextSplit
 
 		// If it is possible to optimize the text, optimize it.
 		// Otherwise, the unoptimized text is also fine.
-		optimizedTs, err := sext.SplitInEqualSizedLines(ts.GetLines(), maxWidth, -1)
+		optimizedTs, err := gcstr.SplitInEqualSizedLines(ts.Lines(), maxWidth, -1)
 		if err != nil {
 			finalTs = append(finalTs, ts)
 		} else {
