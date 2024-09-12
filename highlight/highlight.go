@@ -1,8 +1,8 @@
 package highlight
 
 import (
-	pkg "github.com/PlayerR9/display/screen"
-
+	ds "github.com/PlayerR9/display/screen"
+	gcers "github.com/PlayerR9/go-commons/errors"
 	"github.com/gdamore/tcell"
 )
 
@@ -24,11 +24,37 @@ type Highlight[E interface {
 	data []byte
 }
 
-// DrawTable implements the Highlighter interface.
-func (h Highlight[E, T]) DrawTable(bg_style tcell.Style) (*pkg.DtTable, error) {
-	dt := pkg.NewDtTable()
+// Draw draws the highlighter on the screen.
+//
+// Parameters:
+//   - screen: The screen to draw on.
+//   - x_coord: The x coordinate of the top-left corner of the area to draw in.
+//   - y_coord: The y coordinate of the top-left corner of the area to draw in.
+//
+// Returns:
+//   - error: An error if a parameter is nil.
+func (h Highlight[E, T]) Draw(screen ds.Drawable, x_coord, y_coord *int) error {
+	if screen == nil {
+		return nil
+	}
 
-	var row []*pkg.DtCell
+	var x int
+
+	if x_coord == nil {
+		return gcers.NewErrNilParameter("x_coord")
+	} else {
+		x = *x_coord
+	}
+
+	var y int
+
+	if y_coord == nil {
+		return gcers.NewErrNilParameter("y_coord")
+	} else {
+		y = *y_coord
+	}
+
+	bg_style := screen.BgStyle()
 
 	last_pos := 0
 
@@ -43,14 +69,16 @@ func (h Highlight[E, T]) DrawTable(bg_style tcell.Style) (*pkg.DtTable, error) {
 			for i := last_pos; i < pos; i++ {
 				switch h.data[i] {
 				case '\n':
-					dt.AppendRow(row)
-					row = nil
+					x = 0
+					y++
 				case '\t':
 					for j := 0; j < 3; j++ {
-						row = append(row, pkg.NewDtCell(' ', bg_style))
+						screen.DrawCell(x, y, ' ', bg_style)
+						x++
 					}
 				default:
-					row = append(row, pkg.NewDtCell(' ', bg_style))
+					screen.DrawCell(x, y, ' ', bg_style)
+					x++
 				}
 			}
 
@@ -74,15 +102,35 @@ func (h Highlight[E, T]) DrawTable(bg_style tcell.Style) (*pkg.DtTable, error) {
 		chars := fn(tk.GetData())
 
 		for _, c := range chars {
-			row = append(row, pkg.NewDtCell(c, style))
+			screen.DrawCell(x, y, c, style)
+			x++
 		}
 
 		last_pos = pos + len(chars)
 	}
 
-	dt.AppendRow(row)
+	if last_pos < len(h.data) {
+		for i := last_pos; i < len(h.data); i++ {
+			switch h.data[i] {
+			case '\n':
+				x = 0
+				y++
+			case '\t':
+				for j := 0; j < 3; j++ {
+					screen.DrawCell(x, y, ' ', bg_style)
+					x++
+				}
+			default:
+				screen.DrawCell(x, y, ' ', bg_style)
+				x++
+			}
+		}
+	}
 
-	return dt, nil
+	*x_coord = x
+	*y_coord = y
+
+	return nil
 }
 
 // NewHighlight creates a new highlighter.
