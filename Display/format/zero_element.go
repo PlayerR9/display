@@ -1,7 +1,7 @@
 package format
 
 import (
-	ddt "github.com/PlayerR9/display/table"
+	dtb "github.com/PlayerR9/display/table"
 )
 
 // ZeroElement is a type that represents an element that takes up a certain amount of space.
@@ -14,7 +14,7 @@ type ZeroElement struct {
 }
 
 // Draw implements the drawtable.Displayer interface.
-func (ze *ZeroElement) Draw(table *ddt.Table, x, y *int) error {
+func (ze *ZeroElement) Draw(table *dtb.Table, x, y *int) error {
 	*x += ze.width
 	*y += ze.height
 

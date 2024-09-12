@@ -3,7 +3,8 @@ package Section
 import (
 	"testing"
 
-	cdd "github.com/PlayerR9/display/Displays/Table"
+	ddt "github.com/PlayerR9/display/Displays/Table"
+	dtb "github.com/PlayerR9/display/table"
 	"github.com/gdamore/tcell"
 )
 
@@ -21,15 +22,18 @@ func TestTitle(t *testing.T) {
 		ExpectedLine string = " *** Test Title *** "
 	)
 
-	table := cdd.NewDrawTable(20, 1)
+	table, err := dtb.NewTable(20, 1)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %s", err.Error())
+	}
 
 	// title := NewTitle(Title)
 
-	cell := cdd.NewColoredElement(&MockSection{}, tcell.StyleDefault)
+	cell := ddt.NewColoredElement(&MockSection{}, tcell.StyleDefault)
 
 	x, y := 0, 0
 
-	err := cell.Draw(table, &x, &y)
+	err = cell.Draw(table, &x, &y)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %s", err.Error())
 	}
@@ -86,13 +90,16 @@ func TestMiddleSplit(t *testing.T) {
 	for i, test := range tests {
 		// title := NewTitle(test.title)
 
-		table := cdd.NewDrawTable(test.width, test.height)
+		table, err := dtb.NewTable(test.width, test.height)
+		if err != nil {
+			t.Fatalf("At test %d, expected no error, but got %s", i, err.Error())
+		}
 
-		cell := cdd.NewColoredElement(&MockSection{}, tcell.StyleDefault)
+		cell := ddt.NewColoredElement(&MockSection{}, tcell.StyleDefault)
 
 		x, y := 0, 0
 
-		err := cell.Draw(table, &x, &y)
+		err = cell.Draw(table, &x, &y)
 		if err != nil {
 			t.Fatalf("At test %d, expected no error, but got %s", i, err.Error())
 		}
@@ -119,13 +126,16 @@ func TestTitleTruncation(t *testing.T) {
 
 	// title := NewTitle(Title)
 
-	table := cdd.NewDrawTable(13, 1)
+	table, err := dtb.NewTable(13, 1)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %s", err.Error())
+	}
 
-	cell := cdd.NewColoredElement(&MockSection{}, tcell.StyleDefault)
+	cell := ddt.NewColoredElement(&MockSection{}, tcell.StyleDefault)
 
 	x, y := 0, 0
 
-	err := cell.Draw(table, &x, &y)
+	err = cell.Draw(table, &x, &y)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %s", err.Error())
 	}

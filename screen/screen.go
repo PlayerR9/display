@@ -6,17 +6,11 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-var (
-	// BgStyle is the background style.
-	BgStyle tcell.Style
-)
-
-func init() {
-	BgStyle = tcell.StyleDefault.Background(tcell.ColorGhostWhite).Foreground(tcell.ColorBlack)
-}
-
 // Screen is a screen.
 type Screen struct {
+	// bg_style is the background style.
+	bg_style tcell.Style
+
 	// screen is the tcell screen.
 	screen tcell.Screen
 
@@ -32,10 +26,13 @@ type Screen struct {
 
 // NewScreen creates a new screen.
 //
+// Parameters:
+//   - bg_style: The background style of the screen.
+//
 // Returns:
 //   - *Screen: The new screen.
 //   - error: The error if any.
-func NewScreen() (*Screen, error) {
+func NewScreen(bg_style tcell.Style) (*Screen, error) {
 	screen, err := tcell.NewScreen()
 	if err != nil {
 		return nil, err
@@ -47,6 +44,7 @@ func NewScreen() (*Screen, error) {
 	}
 
 	return &Screen{
+		bg_style: bg_style,
 		screen:   screen,
 		event_ch: make(chan tcell.Event, 1),
 		key_ch:   make(chan *tcell.EventKey),
@@ -80,7 +78,7 @@ func (s *Screen) Start() error {
 		return err
 	}
 
-	s.screen.SetStyle(BgStyle)
+	s.screen.SetStyle(s.bg_style)
 
 	s.screen.EnableMouse()
 
@@ -175,7 +173,7 @@ func (s *Screen) show_display() {
 			cell := row[x]
 
 			if cell == nil {
-				s.screen.SetContent(x, y, ' ', nil, BgStyle)
+				s.screen.SetContent(x, y, ' ', nil, s.bg_style)
 			} else {
 				s.screen.SetContent(x, y, cell.Char, nil, cell.Style)
 			}

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	ddt "github.com/PlayerR9/display/table"
+	dtb "github.com/PlayerR9/display/table"
 	rws "github.com/PlayerR9/safe/rw_safe"
 	"github.com/gdamore/tcell"
 )
@@ -30,10 +30,10 @@ type Display struct {
 	wg sync.WaitGroup
 
 	// table is the draw table of the display.
-	table *ddt.Table
+	table *dtb.Table
 
 	// element is the element to draw.
-	element *rws.Safe[ddt.Displayer]
+	element *rws.Safe[dtb.Displayer]
 
 	// errChan is the channel of errors.
 	errChan chan error
@@ -72,7 +72,7 @@ func NewDisplay(bgStyle tcell.Style) (*Display, error) {
 
 	width, height := screen.Size()
 
-	table, err := ddt.NewTable(width, height)
+	table, err := dtb.NewTable(width, height)
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +93,7 @@ func (d *Display) Start() {
 	d.keyChan = make(chan tcell.EventKey)
 
 	d.shouldClose = rws.NewSafe[bool](false)
-	d.element = rws.NewSafe[ddt.Displayer](nil)
+	d.element = rws.NewSafe[dtb.Displayer](nil)
 
 	d.screen.EnableMouse()
 
@@ -140,7 +140,7 @@ func (d *Display) ReceiveErr() (error, bool) {
 //
 // Parameters:
 //   - elem: The element to draw.
-func (d *Display) Draw(elem ddt.Displayer) {
+func (d *Display) Draw(elem dtb.Displayer) {
 	d.element.Set(elem)
 
 	d.drawScreen()
@@ -206,7 +206,7 @@ func (d *Display) ListenForKey() (rune, bool) {
 func (d *Display) resizeEvent() {
 	d.width, d.height = d.screen.Size()
 
-	tmp, err := ddt.NewTable(d.width, d.height)
+	tmp, err := dtb.NewTable(d.width, d.height)
 	if err != nil {
 		panic(err)
 	}

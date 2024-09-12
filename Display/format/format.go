@@ -5,14 +5,14 @@ import (
 	"slices"
 	"sync"
 
-	ddt "github.com/PlayerR9/display/table"
+	dtb "github.com/PlayerR9/display/table"
 	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
 // Format is a type that represents a format.
 type Format[T gcers.Enumer] struct {
 	// m is the map of elements.
-	m map[T]ddt.Displayer
+	m map[T]dtb.Displayer
 
 	// order is the order of the elements.
 	order []T
@@ -22,7 +22,7 @@ type Format[T gcers.Enumer] struct {
 }
 
 // Draw implements the drawtable.Displayer interface.
-func (f *Format[T]) Draw(table *ddt.Table, x, y *int) error {
+func (f *Format[T]) Draw(table *dtb.Table, x, y *int) error {
 	order := f.GetOrder()
 
 	xCoord := *x
@@ -55,7 +55,7 @@ func (f *Format[T]) Draw(table *ddt.Table, x, y *int) error {
 //   - *Format: The new format.
 func NewFormat[T gcers.Enumer]() *Format[T] {
 	return &Format[T]{
-		m: make(map[T]ddt.Displayer),
+		m: make(map[T]dtb.Displayer),
 	}
 }
 
@@ -64,7 +64,7 @@ func NewFormat[T gcers.Enumer]() *Format[T] {
 // Parameters:
 //   - key: The key of the element.
 //   - elem: The element to add.
-func (f *Format[T]) AddElement(key T, elem ddt.Displayer) {
+func (f *Format[T]) AddElement(key T, elem dtb.Displayer) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -94,7 +94,7 @@ func (f *Format[T]) GetOrder() []T {
 // Returns:
 //   - Displayer: The element.
 //   - bool: True if the element exists, false otherwise.
-func (f *Format[T]) GetElement(key T) (ddt.Displayer, bool) {
+func (f *Format[T]) GetElement(key T) (dtb.Displayer, bool) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -107,7 +107,7 @@ func (f *Format[T]) GetElement(key T) (ddt.Displayer, bool) {
 // Parameters:
 //   - key: The key of the element.
 //   - elem: The element to replace the existing element with.
-func (f *Format[T]) ReplaceElement(key T, elem ddt.Displayer) {
+func (f *Format[T]) ReplaceElement(key T, elem dtb.Displayer) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
