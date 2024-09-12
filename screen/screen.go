@@ -3,6 +3,7 @@ package screen
 import (
 	dtb "github.com/PlayerR9/display/table"
 	gcers "github.com/PlayerR9/go-commons/errors"
+	gda "github.com/PlayerR9/go-debug/assert"
 	"github.com/gdamore/tcell"
 )
 
@@ -39,9 +40,7 @@ func NewScreen(bg_style tcell.Style) (*Screen, error) {
 	}
 
 	dt, err := dtb.NewTable(80, 25)
-	if err != nil {
-		panic(err)
-	}
+	gda.AssertErr(err, "table.NewTable(80, 25)")
 
 	return &Screen{
 		bg_style: bg_style,
@@ -136,14 +135,10 @@ func (s *Screen) run() {
 			width, height := ev.Size()
 
 			err := s.dt.ResizeWidth(width)
-			if err != nil {
-				panic(err)
-			}
+			gda.AssertErr(err, "s.dt.ResizeWidth(%d)", width)
 
 			err = s.dt.ResizeHeight(height)
-			if err != nil {
-				panic(err)
-			}
+			gda.AssertErr(err, "s.dt.ResizeHeight(%d)", height)
 
 			s.show_display()
 			// case *tcell.EventMouse:

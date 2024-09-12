@@ -3,6 +3,7 @@ package highlight
 import (
 	ds "github.com/PlayerR9/display/screen"
 	gcers "github.com/PlayerR9/go-commons/errors"
+	gda "github.com/PlayerR9/go-debug/assert"
 	"github.com/gdamore/tcell"
 )
 
@@ -61,9 +62,7 @@ func (h Highlight[E, T]) Draw(screen ds.Drawable, x_coord, y_coord *int) error {
 	for _, tk := range h.tokens[:len(h.tokens)-1] {
 		pos := tk.GetPos()
 
-		if last_pos > pos {
-			panic("tokens must be ordered by position")
-		}
+		gda.Assert(pos <= last_pos, "tokens must be ordered by position")
 
 		if last_pos < pos {
 			for i := last_pos; i < pos; i++ {

@@ -1,5 +1,7 @@
 github.com/PlayerR9/go-commons v0.1.16 h1:zMJjZ9VcNfT2pubNoVsH022+6eQt9HuAVf2f12CYEEo=
 github.com/PlayerR9/go-commons v0.1.16/go.mod h1:Abgs7CiggY1rhwwBPhv8G60HevRR1WMSVQVYfhIPgms=
+github.com/PlayerR9/go-debug v0.1.6 h1:stKrsXtJLBooP2PG/Clrfi56u/oOzrVkoFeCRIKz1vQ=
+github.com/PlayerR9/go-debug v0.1.6/go.mod h1:SzUukvPW2udZk9KkysIdWdRjEEQPKhAbQav+fpDLzxY=
 github.com/PlayerR9/safe v0.1.10 h1:BSGTn3iSd3QbQJ7xFzaZGkl+NElEW0GCqmUoKM8TkhY=
 github.com/PlayerR9/safe v0.1.10/go.mod h1:U2rscEFmasdyK+cuXjmz8yOGZMvq4E437zywRQe52jI=
 github.com/PlayerR9/table v0.1.13 h1:yNVQz9jV1BqrdOrbjsP9Va7/bW7i9A3x2fdks23KVlc=

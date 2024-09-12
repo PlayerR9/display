@@ -6,6 +6,7 @@ import (
 	"unicode/utf8"
 
 	gcstr "github.com/PlayerR9/display/util/Formatting/strings"
+	gda "github.com/PlayerR9/go-debug/assert"
 )
 
 const (
@@ -172,9 +173,7 @@ func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *gcstr.Text
 		}
 
 		ok = ts.InsertWord(line)
-		if !ok {
-			panic("could not insert word")
-		}
+		gda.AssertOk(ok, "ts.InsertWord(%q)", line)
 
 		return ts, true, nil
 	}
@@ -209,9 +208,7 @@ func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *gcstr.Text
 		}
 
 		firstNotInserted := ts.InsertWords(wordsProcessed)
-		if firstNotInserted != -1 {
-			panic(fmt.Sprintf("could not insert word %s", wordsProcessed[firstNotInserted]))
-		}
+		gda.AssertF(firstNotInserted == -1, "ts.InsertWords(%q)", wordsProcessed)
 
 		return ts, true, nil
 	} else {
@@ -226,9 +223,7 @@ func (mlt *MultilineText) processLine(isFirst bool, maxWidth int, ts *gcstr.Text
 		wordsProcessed := halfTs.FirstLine()
 
 		firstNotInserted := ts.InsertWords(wordsProcessed)
-		if firstNotInserted != -1 {
-			panic(fmt.Sprintf("could not insert word %s", wordsProcessed[firstNotInserted]))
-		}
+		gda.AssertF(firstNotInserted == -1, "ts.InsertWords(%q)", wordsProcessed)
 
 		return ts, false, nil
 	}

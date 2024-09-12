@@ -8,6 +8,7 @@ import (
 	"time"
 
 	dtb "github.com/PlayerR9/display/table"
+	gda "github.com/PlayerR9/go-debug/assert"
 	rws "github.com/PlayerR9/safe/rw_safe"
 	"github.com/gdamore/tcell"
 )
@@ -73,9 +74,7 @@ func NewDisplay(bgStyle tcell.Style) (*Display, error) {
 	width, height := screen.Size()
 
 	table, err := dtb.NewTable(width, height)
-	if err != nil {
-		panic(err)
-	}
+	gda.AssertErr(err, "table.NewTable(width, height)")
 
 	return &Display{
 		screen:  screen,
@@ -207,9 +206,7 @@ func (d *Display) resizeEvent() {
 	d.width, d.height = d.screen.Size()
 
 	tmp, err := dtb.NewTable(d.width, d.height)
-	if err != nil {
-		panic(err)
-	}
+	gda.AssertErr(err, "table.NewTable(d.width, d.height)")
 
 	d.table = tmp
 }
