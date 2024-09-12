@@ -2,7 +2,6 @@ package highlight
 
 import (
 	pkg "github.com/PlayerR9/display/screen"
-
 	"github.com/gdamore/tcell"
 )
 
@@ -24,13 +23,12 @@ type Highlight[E interface {
 	data []byte
 }
 
-// DrawTable implements the Highlighter interface.
-func (h Highlight[E, T]) DrawTable(bg_style tcell.Style) (*pkg.DtTable, error) {
-	dt := pkg.NewDtTable()
-
-	var row []*pkg.DtCell
+func (h Highlight[E, T]) Draw(vt *pkg.VirtualTable) {
+	bg_style := vt.BgStyle()
 
 	last_pos := 0
+
+	x, y := 0, 0
 
 	for _, tk := range h.tokens[:len(h.tokens)-1] {
 		pos := tk.GetPos()
@@ -43,14 +41,16 @@ func (h Highlight[E, T]) DrawTable(bg_style tcell.Style) (*pkg.DtTable, error) {
 			for i := last_pos; i < pos; i++ {
 				switch h.data[i] {
 				case '\n':
-					dt.AppendRow(row)
-					row = nil
+					x = 0
+					y++
 				case '\t':
 					for j := 0; j < 3; j++ {
-						row = append(row, pkg.NewDtCell(' ', bg_style))
+						vt.DrawCellAt(x, y, pkg.NewDtCell(' ', bg_style))
+						x++
 					}
 				default:
-					row = append(row, pkg.NewDtCell(' ', bg_style))
+					vt.DrawCellAt(x, y, pkg.NewDtCell(' ', bg_style))
+					x++
 				}
 			}
 
@@ -74,15 +74,12 @@ func (h Highlight[E, T]) DrawTable(bg_style tcell.Style) (*pkg.DtTable, error) {
 		chars := fn(tk.GetData())
 
 		for _, c := range chars {
-			row = append(row, pkg.NewDtCell(c, style))
+			vt.DrawCellAt(x, y, pkg.NewDtCell(c, style))
+			x++
 		}
 
 		last_pos = pos + len(chars)
 	}
-
-	dt.AppendRow(row)
-
-	return dt, nil
 }
 
 // NewHighlight creates a new highlighter.

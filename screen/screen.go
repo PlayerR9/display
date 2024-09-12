@@ -1,8 +1,9 @@
 package screen
 
 import (
+	"fmt"
+
 	gcers "github.com/PlayerR9/go-commons/errors"
-	rws "github.com/PlayerR9/safe/rw_safe"
 	"github.com/gdamore/tcell"
 )
 
@@ -26,23 +27,11 @@ type Screen struct {
 	// key_ch is the key channel.
 	key_ch chan *tcell.EventKey
 
-	// width is the width of the screen.
-	width int
-
-	// height is the height of the screen.
-	height int
-
 	// dt is the display table.
 	dt *DtTable
 
-	// to_display is the table to display.
-	to_display *rws.Safe[*DtTable]
-
-	// pos_y is the position of the cursor.
-	pos_y *rws.Safe[int]
-
-	// pos_x is the position of the cursor.
-	pos_x *rws.Safe[int]
+	// vt is the virtual table.
+	vt *VirtualTable
 }
 
 // NewScreen creates a new screen.
@@ -56,15 +45,21 @@ func NewScreen() (*Screen, error) {
 		return nil, err
 	}
 
+	dt, err := NewDtTable(80, 25)
+	if err != nil {
+		panic(fmt.Sprintf("could not create table: %v", err.Error()))
+	}
+
+	vt := &VirtualTable{
+		actual_table: dt,
+	}
+
 	return &Screen{
-		screen:     screen,
-		event_ch:   make(chan tcell.Event, 1),
-		key_ch:     make(chan *tcell.EventKey),
-		width:      80,
-		height:     25,
-		pos_x:      rws.NewSafe(0),
-		pos_y:      rws.NewSafe(0),
-		to_display: rws.NewSafe[*DtTable](nil),
+		screen:   screen,
+		event_ch: make(chan tcell.Event, 1),
+		key_ch:   make(chan *tcell.EventKey),
+		dt:       dt,
+		vt:       vt,
 	}, nil
 }
 
@@ -100,7 +95,10 @@ func (s *Screen) Start() error {
 
 	s.screen.Clear()
 
-	s.width, s.height = s.screen.Size()
+	width, height := s.screen.Size()
+
+	s.dt.ResizeHeight(height)
+	s.dt.ResizeWidth(width)
 
 	go s.event_listener()
 
@@ -128,6 +126,19 @@ func (s *Screen) Close() {
 	}
 }
 
+// Table returns the display table.
+//
+// Returns:
+//   - Tabler: The display table.
+//   - bool: True if the table exists, false otherwise.
+func (s *Screen) Table() (*VirtualTable, bool) {
+	if s == nil {
+		return nil, false
+	}
+
+	return s.vt, true
+}
+
 // run runs the screen.
 func (s *Screen) run() {
 	for ev := range s.event_ch {
@@ -139,7 +150,10 @@ func (s *Screen) run() {
 		case *tcell.EventResize:
 			// s.screen.Sync()
 
-			s.width, s.height = ev.Size()
+			width, height := ev.Size()
+
+			s.dt.ResizeHeight(height)
+			s.dt.ResizeWidth(width)
 
 			s.show_display()
 			// case *tcell.EventMouse:
@@ -162,63 +176,33 @@ func (s *Screen) run() {
 func (s *Screen) show_display() {
 	s.screen.Clear()
 
-	table := s.to_display.Get()
+	s.vt.Refresh()
 
-	if table == nil {
-		s.screen.Show()
+	x, y := 0, 0
 
-		return
-	}
+	width := s.dt.Width()
+	height := s.dt.Height()
 
-	y := 0
-	x := 0
-
-	pos_x := s.pos_x.Get()
-	pos_y := s.pos_y.Get()
-
-	if pos_y >= table.Height() {
-		s.screen.Show()
-
-		return
-	} else if pos_y < 0 {
-		y -= pos_y
-		pos_y = 0
-	}
-
-	underlying_table := table.cells[pos_y:]
-
-	for _, row := range underlying_table {
-		if y >= s.height-3 {
-			break
-		}
-
-		j := 0
-		for _, c := range row {
-			if j >= s.width {
-				j = 0
+	for i := 0; i < len(s.dt.cells) && y < height; i++ {
+		for j := 0; j < len(s.dt.cells[i]) && x < width; j++ {
+			if x >= s.dt.Width() {
+				x = 0
 				y++
-				x = pos_x // Change this to indent the next line
 			}
 
-			if c == nil {
-				c = NewDtCell(' ', BgStyle)
-			}
-
-			s.screen.SetContent(x, y, c.char, nil, c.style)
-
-			j++
+			s.screen.SetContent(x, i, s.dt.cells[i][j].char, nil, s.dt.cells[i][j].style)
 			x++
 		}
 
+		x = 0
 		y++
-		x = pos_x
 	}
 
 	style := tcell.StyleDefault.Background(tcell.ColorCornflowerBlue).Foreground(tcell.ColorWhite)
 
-	s.display_label(0, s.height-2, style, "Press UP/DOWN to scroll")
+	s.display_label(0, height-2, style, "Press UP/DOWN to scroll")
 
-	s.display_label(0, s.height-1, style, "Press ENTER to exit")
+	s.display_label(0, height-1, style, "Press ENTER to exit")
 
 	s.screen.Show()
 }
@@ -238,18 +222,6 @@ func (s *Screen) display_label(x, y int, style tcell.Style, text string) {
 	}
 }
 
-// Table returns the table.
-//
-// Returns:
-//   - *DtTable: The table. Nil only if the receiver is nil.
-func (s *Screen) Table() *DtTable {
-	if s == nil {
-		return nil
-	}
-
-	return s.dt
-}
-
 // Display displays the screen.
 //
 // Parameters:
@@ -257,25 +229,10 @@ func (s *Screen) Table() *DtTable {
 //
 // Returns:
 //   - error: An error if the screen could not be displayed.
-func (s *Screen) Display(x, y int, drawer Drawer) error {
+func (s *Screen) Display() error {
 	if s == nil {
 		return gcers.NilReceiver
 	}
-
-	var table *DtTable
-
-	if drawer != nil {
-		tmp, err := drawer.DrawTable(BgStyle)
-		if err != nil {
-			return err
-		}
-
-		table = tmp
-	}
-
-	s.to_display.Set(table)
-	s.pos_x.Set(x)
-	s.pos_y.Set(y)
 
 	s.show_display()
 

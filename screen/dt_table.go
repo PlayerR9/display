@@ -1,8 +1,11 @@
 package screen
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell"
 
+	gcers "github.com/PlayerR9/go-commons/errors"
 	gcch "github.com/PlayerR9/go-commons/runes"
 )
 
@@ -55,6 +58,73 @@ type DtTable struct {
 	height int
 }
 
+// NewDtTable creates a new table.
+//
+// Parameters:
+//   - width: The width of the table.
+//   - height: The height of the table.
+//
+// Returns:
+//   - *DtTable: The new table.
+//   - error: An error if the table could not be created.
+func NewDtTable(width, height int) (*DtTable, error) {
+	if width < 0 {
+		return nil, gcers.NewErrInvalidParameter("width", gcers.NewErrGTE(0))
+	} else if height < 0 {
+		return nil, gcers.NewErrInvalidParameter("height", gcers.NewErrGTE(0))
+	}
+
+	cells := make([][]*DtCell, 0, height)
+
+	for i := 0; i < height; i++ {
+		cells = append(cells, make([]*DtCell, width))
+	}
+
+	return &DtTable{
+		cells:  cells,
+		width:  width,
+		height: height,
+	}, nil
+}
+
+// ResizeHeight resizes the height of the table.
+//
+// Parameters:
+//   - height: The new height of the table.
+//
+// Returns:
+//   - error: An error if the table could not be resized.
+func (dt *DtTable) ResizeHeight(height int) error {
+	if dt == nil {
+		return gcers.NilReceiver
+	} else if height < 0 {
+		return gcers.NewErrInvalidParameter("height", gcers.NewErrGTE(0))
+	}
+
+	dt.height = height
+
+	return nil
+}
+
+// ResizeWidth resizes the width of the table.
+//
+// Parameters:
+//   - width: The new width of the table.
+//
+// Returns:
+//   - error: An error if the table could not be resized.
+func (dt *DtTable) ResizeWidth(width int) error {
+	if dt == nil {
+		return gcers.NilReceiver
+	} else if width < 0 {
+		return gcers.NewErrInvalidParameter("width", gcers.NewErrGTE(0))
+	}
+
+	dt.width = width
+
+	return nil
+}
+
 // DrawTable implements Drawer interface.
 func (dt DtTable) DrawTable(bg_style tcell.Style) (*DtTable, error) {
 	cells := make([][]*DtCell, 0, dt.height)
@@ -88,14 +158,6 @@ func (dt DtTable) DrawTable(bg_style tcell.Style) (*DtTable, error) {
 		width:  dt.width,
 		height: dt.height,
 	}, nil
-}
-
-// NewDtTable creates a new empty table.
-//
-// Returns:
-//   - *DtTable: The new table. Never returns nil.
-func NewDtTable() *DtTable {
-	return &DtTable{}
 }
 
 // Width returns the width of the table.
@@ -154,7 +216,10 @@ func NewTableFromBytes(data []byte, fg_style tcell.Style) (*DtTable, error) {
 		return nil, err
 	}
 
-	table := NewDtTable()
+	table, err := NewDtTable(0, 0)
+	if err != nil {
+		panic(fmt.Sprintf("could not create table: %v", err.Error()))
+	}
 
 	var row []*DtCell
 
@@ -172,4 +237,12 @@ func NewTableFromBytes(data []byte, fg_style tcell.Style) (*DtTable, error) {
 	}
 
 	return table, nil
+}
+
+func (dt *DtTable) DrawCellAt(x, y int, cell *DtCell) {
+	if dt == nil || x < 0 || x >= dt.width || y < 0 || y >= dt.height {
+		return
+	}
+
+	dt.cells[y][x] = cell
 }
