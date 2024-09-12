@@ -3,7 +3,7 @@ package Section
 import (
 	"testing"
 
-	cdd "github.com/PlayerR9/display/Displays/Table"
+	cdd "github.com/PlayerR9/display/table"
 	"github.com/gdamore/tcell"
 )
 
@@ -15,7 +15,10 @@ func TestWriteLines_ShortLines(t *testing.T) {
 		t.Fatalf("Expected no error, but got %s", err.Error())
 	}
 
-	table := cdd.NewDrawTable(18, 2)
+	table, err := cdd.NewTable(18, 2)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %s", err.Error())
+	}
 
 	cell := cdd.NewColoredElement(&MockSection{}, tcell.StyleDefault)
 

@@ -1,6 +1,9 @@
 package screen
 
-import "github.com/gdamore/tcell"
+import (
+	dtb "github.com/PlayerR9/display/table"
+	"github.com/gdamore/tcell"
+)
 
 // Drawable is an interface that can be drawn.
 type Drawable interface {
@@ -18,4 +21,17 @@ type Drawable interface {
 	// Returns:
 	//   - tcell.Style: The background style.
 	BgStyle() tcell.Style
+}
+
+// Drawer is a table drawer.
+type Drawer interface {
+	// DrawTable draws the table.
+	//
+	// Parameters:
+	//   - bg_style: The background style of the table.
+	//
+	// Returns:
+	//   - *DtTable: The table that was drawn.
+	//   - error: An error if the table could not be drawn.
+	DrawTable(bg_style tcell.Style) (*dtb.Table, error)
 }

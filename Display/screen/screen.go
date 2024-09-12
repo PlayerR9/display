@@ -7,10 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gdamore/tcell"
-
-	ddt "github.com/PlayerR9/display/Display/drawtable"
+	ddt "github.com/PlayerR9/display/table"
 	rws "github.com/PlayerR9/safe/rw_safe"
+	"github.com/gdamore/tcell"
 )
 
 // Display represents a display that can draw elements to the screen.
@@ -31,7 +30,7 @@ type Display struct {
 	wg sync.WaitGroup
 
 	// table is the draw table of the display.
-	table *ddt.DrawTable
+	table *ddt.Table
 
 	// element is the element to draw.
 	element *rws.Safe[ddt.Displayer]
@@ -73,7 +72,10 @@ func NewDisplay(bgStyle tcell.Style) (*Display, error) {
 
 	width, height := screen.Size()
 
-	table := ddt.NewDrawTable(width, height)
+	table, err := ddt.NewTable(width, height)
+	if err != nil {
+		panic(err)
+	}
 
 	return &Display{
 		screen:  screen,
@@ -204,7 +206,12 @@ func (d *Display) ListenForKey() (rune, bool) {
 func (d *Display) resizeEvent() {
 	d.width, d.height = d.screen.Size()
 
-	d.table = ddt.NewDrawTable(d.width, d.height)
+	tmp, err := ddt.NewTable(d.width, d.height)
+	if err != nil {
+		panic(err)
+	}
+
+	d.table = tmp
 }
 
 // drawScreen is a helper method that draws the screen.
@@ -222,24 +229,18 @@ func (d *Display) drawScreen() {
 			d.errChan <- fmt.Errorf("error drawing element: %w", err)
 		}
 
-		height := d.table.GetHeight()
-		width := d.table.GetWidth()
-
-		for i := 0; i < height; i++ {
-			for j := 0; j < width; j++ {
-				cell := d.table.GetAt(j, i)
+		for row := range d.table.Row() {
+			for j := 0; j < len(row); j++ {
+				cell := row[j]
 
 				if cell == nil {
 					continue
 				}
 
-				runes, err := cell.Runes(1, 1)
-				if err != nil {
-					d.errChan <- fmt.Errorf("error getting runes: %w", err)
-				}
-
-				d.screen.SetContent(j, i, runes[0][0], nil, cell.GetStyle())
+				d.screen.SetContent(j, yCoord, cell.Char, nil, cell.Style)
 			}
+
+			yCoord++
 		}
 	}
 

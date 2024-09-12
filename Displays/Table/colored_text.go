@@ -1,6 +1,9 @@
 package Table
 
-import "github.com/gdamore/tcell"
+import (
+	dtb "github.com/PlayerR9/display/table"
+	"github.com/gdamore/tcell"
+)
 
 // ColoredText is a unit that represents a colored text.
 type ColoredText struct {
@@ -25,8 +28,8 @@ type ColoredText struct {
 // Behaviors:
 //   - Any value that would be drawn outside of the table is not drawn.
 //   - Assumes that the table is not nil.
-func (ct *ColoredText) Draw(table *DrawTable, x, y *int) error {
-	height := table.GetHeight()
+func (ct *ColoredText) Draw(table *dtb.Table, x, y *int) error {
+	height := table.Height()
 	X, Y := *x, *y
 
 	var offsetX int

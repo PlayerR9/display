@@ -1,7 +1,7 @@
 package Table
 
 import (
-	cdt "github.com/PlayerR9/display/Table"
+	dtb "github.com/PlayerR9/display/table"
 	tg "github.com/PlayerR9/table"
 	"github.com/gdamore/tcell"
 )
@@ -29,8 +29,8 @@ type ColoredElement[T Colorer] struct {
 // Behaviors:
 //   - Any value that would be drawn outside of the table is not drawn.
 //   - Assumes that the table is not nil.
-func (ce *ColoredElement[T]) Draw(table *DrawTable, x, y *int) error {
-	width, height := table.GetWidth(), table.GetHeight()
+func (ce *ColoredElement[T]) Draw(table *dtb.Table, x, y *int) error {
+	width, height := table.Width(), table.Height()
 
 	runeTable, err := ce.elem.Runes(width, height)
 	if err != nil {
@@ -52,13 +52,13 @@ func (ce *ColoredElement[T]) Draw(table *DrawTable, x, y *int) error {
 			continue
 		}
 
-		sequence := make([]*cdt.ColoredUnit, 0, len(row))
+		sequence := make([]*dtb.Cell, 0, len(row))
 
 		for _, r := range row {
 			if r == EmptyRuneCell {
 				sequence = append(sequence, nil)
 			} else {
-				sequence = append(sequence, cdt.NewColoredUnit(r, ce.style))
+				sequence = append(sequence, dtb.NewCell(r, ce.style))
 			}
 		}
 
@@ -104,19 +104,19 @@ func NewColoredElement[T Colorer](elem T, style tcell.Style) *ColoredElement[T] 
 //   - Errors are only for critical issues, such as the element not being able to be
 //     colored. However, out of bounds or other issues should not error. Instead, the
 //     element should be colored as much as possible before unable to be colored.
-func (ce *ColoredElement[T]) Apply(width, height int) ([][]*cdt.ColoredUnit, error) {
+func (ce *ColoredElement[T]) Apply(width, height int) ([][]*dtb.Cell, error) {
 	runeTable, err := ce.elem.Runes(width, height)
 	if err != nil {
 		return nil, err
 	}
 
-	colorTable := make([][]*cdt.ColoredUnit, len(runeTable))
+	colorTable := make([][]*dtb.Cell, len(runeTable))
 
 	for _, row := range runeTable {
-		var colorRow []*cdt.ColoredUnit
+		var colorRow []*dtb.Cell
 
 		for _, r := range row {
-			colorRow = append(colorRow, cdt.NewColoredUnit(r, ce.style))
+			colorRow = append(colorRow, dtb.NewCell(r, ce.style))
 		}
 
 		colorTable = append(colorTable, colorRow)

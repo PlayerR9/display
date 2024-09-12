@@ -1,5 +1,7 @@
 package Table
 
+import dtb "github.com/PlayerR9/display/table"
+
 const (
 	// EmptyRuneCell is a rune that represents an empty cell.
 	EmptyRuneCell rune = '\000'
@@ -42,7 +44,7 @@ type TableDrawer interface {
 	// Behaviors:
 	//   - Any value that would be drawn outside of the table is not drawn.
 	//   - Assumes that the table is not nil.
-	Draw(table *DrawTable, x, y *int) error
+	Draw(table *dtb.Table, x, y *int) error
 
 	Colorer
 }

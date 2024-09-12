@@ -5,7 +5,7 @@ import (
 	"slices"
 	"sync"
 
-	ddt "github.com/PlayerR9/display/Display/drawtable"
+	ddt "github.com/PlayerR9/display/table"
 	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
@@ -22,7 +22,7 @@ type Format[T gcers.Enumer] struct {
 }
 
 // Draw implements the drawtable.Displayer interface.
-func (f *Format[T]) Draw(table *ddt.DrawTable, x, y *int) error {
+func (f *Format[T]) Draw(table *ddt.Table, x, y *int) error {
 	order := f.GetOrder()
 
 	xCoord := *x

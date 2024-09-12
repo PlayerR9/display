@@ -1,4 +1,4 @@
-package drawtable
+package table
 
 type Displayer interface {
 	// Draw is a method of cdd.TableDrawer that draws the unit to the table at the given x and y
@@ -15,5 +15,5 @@ type Displayer interface {
 	// Behaviors:
 	//   - Any value that would be drawn outside of the table is not drawn.
 	//   - Assumes that the table is not nil.
-	Draw(table *DrawTable, x, y *int) error
+	Draw(table *Table, x, y *int) error
 }
