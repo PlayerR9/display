@@ -1,36 +1,27 @@
 package screen
 
 import (
-	gcers "github.com/PlayerR9/go-commons/errors"
 	gcch "github.com/PlayerR9/go-commons/runes"
 	"github.com/gdamore/tcell"
 )
 
+// TextBox is a text box.
 type TextBox struct {
+	// chars is the text of the text box.
 	chars []rune
+
+	// style is the style of the text box.
 	style tcell.Style
 }
 
+// Draw implements the Drawable interface.
 func (tb TextBox) Draw(screen Drawable, x_coord, y_coord *int) error {
-	var x int
-
-	if x_coord == nil {
-		return gcers.NewErrNilParameter("x_coord")
-	} else {
-		x = *x_coord
-	}
-
-	var y int
-
-	if y_coord == nil {
-		return gcers.NewErrNilParameter("y_coord")
-	} else {
-		y = *y_coord
-	}
-
 	if screen == nil {
 		return nil
 	}
+
+	x := *x_coord
+	y := *y_coord
 
 	bg_style := screen.BgStyle()
 
@@ -56,15 +47,26 @@ func (tb TextBox) Draw(screen Drawable, x_coord, y_coord *int) error {
 	return nil
 }
 
+// NewTextBox creates a new text box.
+//
+// Returns:
+//   - *TextBox: The new text box. Never returns nil.
 func NewTextBox() *TextBox {
 	return &TextBox{
 		style: tcell.StyleDefault,
 	}
 }
 
+// ChangeText changes the text of the text box. Does nothing with a nil receiver.
+//
+// Returns:
+//   - error: An error if the text could not be changed.
+//
+// Errors:
+//   - *runes.ErrInvalidUTF8Encoding: If the text is not valid UTF-8.
 func (tb *TextBox) ChangeText(text string) error {
 	if tb == nil {
-		return gcers.NilReceiver
+		return nil
 	}
 
 	chars, err := gcch.StringToUtf8(text)
@@ -77,12 +79,14 @@ func (tb *TextBox) ChangeText(text string) error {
 	return nil
 }
 
-func (tb *TextBox) ChangeStyle(style tcell.Style) error {
+// ChangeStyle changes the style of the text box. Does nothing with a nil receiver.
+//
+// Returns:
+//   - error: An error if the style could not be changed.
+func (tb *TextBox) ChangeStyle(style tcell.Style) {
 	if tb == nil {
-		return gcers.NilReceiver
+		return
 	}
 
 	tb.style = style
-
-	return nil
 }

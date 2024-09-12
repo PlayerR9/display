@@ -1,11 +1,15 @@
 package screen
 
 import (
+	"context"
+
 	dtb "github.com/PlayerR9/display/table"
 	gcers "github.com/PlayerR9/go-commons/errors"
 	gda "github.com/PlayerR9/go-debug/assert"
 	"github.com/gdamore/tcell"
 )
+
+type DisplayKey string
 
 // Screen is a screen.
 type Screen struct {
@@ -22,7 +26,7 @@ type Screen struct {
 	key_ch chan *tcell.EventKey
 
 	// dt is the draw table.
-	dt *dtb.Table
+	dt *Display
 }
 
 // NewScreen creates a new screen.
@@ -39,8 +43,16 @@ func NewScreen(bg_style tcell.Style) (*Screen, error) {
 		return nil, err
 	}
 
-	dt, err := dtb.NewTable(80, 25)
+	buffer, err := dtb.NewTable(80, 25)
 	gda.AssertErr(err, "table.NewTable(80, 25)")
+
+	frame, err := dtb.NewTable(80, 25)
+	gda.AssertErr(err, "table.NewTable(80, 25)")
+
+	dt := &Display{
+		buffer: buffer,
+		frame:  frame,
+	}
 
 	return &Screen{
 		bg_style: bg_style,
@@ -67,7 +79,11 @@ func (s *Screen) event_listener() {
 //
 // Returns:
 //   - error: The error if any.
-func (s *Screen) Start() error {
+func (s *Screen) Start() (context.Context, error) {
+	k := DisplayKey("display")
+
+	ctx := context.WithValue(context.Background(), k, dt)
+
 	if s == nil {
 		return gcers.NilReceiver
 	}
@@ -85,12 +101,7 @@ func (s *Screen) Start() error {
 
 	width, height := s.screen.Size()
 
-	err = s.dt.ResizeWidth(width)
-	if err != nil {
-		return err
-	}
-
-	err = s.dt.ResizeHeight(height)
+	err = s.dt.resize(width, height)
 	if err != nil {
 		return err
 	}
@@ -134,11 +145,8 @@ func (s *Screen) run() {
 
 			width, height := ev.Size()
 
-			err := s.dt.ResizeWidth(width)
-			gda.AssertErr(err, "s.dt.ResizeWidth(%d)", width)
-
-			err = s.dt.ResizeHeight(height)
-			gda.AssertErr(err, "s.dt.ResizeHeight(%d)", height)
+			err := s.dt.resize(width, height)
+			gda.AssertErr(err, "s.dt.ResizeWidth(%d, %d)", width, height)
 
 			s.show_display()
 			// case *tcell.EventMouse:
@@ -185,7 +193,7 @@ func (s *Screen) show_display() {
 //   - y: The y position of the cell.
 //   - c: The character of the cell.
 //   - style: The style of the cell.
-func (s *Screen) SetCell(x, y int, c rune, style tcell.Style) {
+func (s *Screen) DrawCell(x, y int, c rune, style tcell.Style) {
 	if s == nil {
 		return
 	}
@@ -208,39 +216,43 @@ func (s *Screen) display_label(x, y int, style tcell.Style, text string) {
 	}
 }
 
-/* // Display displays the screen.
+// Show shows the screen.
 //
 // Parameters:
-//   - drawer: The drawer to draw. Can be nil.
+//   - elem: The element to draw. Can be nil.
+//   - x: The x position of the element.
+//   - y: The y position of the element.
 //
 // Returns:
-//   - error: An error if the screen could not be displayed.
-func (s *Screen) Display() error {
+//   - int: The new x position.
+//   - int: The new y position.
+//   - error: An error if the screen could not be shown.
+func (s *Screen) Show(elem Drawer, x, y int) (int, int, error) {
 	if s == nil {
-		return gcers.NilReceiver
-	}
-
-	s.screen.Show()
-
-	return nil
-} */
-
-/* // Clear clears the screen.
-//
-// Parameters:
-//   - None.
-//
-// Returns:
-//   - error: An error if the screen could not be cleared.
-func (s *Screen) Clear() error {
-	if s == nil {
-		return gcers.NilReceiver
+		return x, y, nil
 	}
 
 	s.screen.Clear()
+	defer s.screen.Show()
 
-	return nil
-} */
+	var err error
+
+	if elem != nil {
+		err = elem.Draw(s, &x, &y)
+	}
+
+	return x, y, err
+}
+
+// Clear clears the screen.
+func (s *Screen) Clear() {
+	if s == nil {
+		return
+	}
+
+	s.screen.Clear()
+	s.screen.Show()
+}
 
 // ListenForKey listens for a key press event on the screen.
 //
@@ -280,9 +292,21 @@ func (s *Screen) Height() int {
 // Returns:
 //   - int: The width of the screen.
 func (s *Screen) Width() int {
-	if s == nil || s.dt == nil {
+	if s == nil {
 		return 0
 	}
 
 	return s.dt.Width()
+}
+
+// BgStyle returns the background style.
+//
+// Returns:
+//   - tcell.Style: The background style.
+func (d *Screen) BgStyle() tcell.Style {
+	return d.bg_style
+}
+
+func (s *Screen) Table() *Display {
+	return s.dt
 }
